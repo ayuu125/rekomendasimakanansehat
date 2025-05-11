@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Rekomendasi Makanan Sehat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f9;
+    }
+    header {
+      background-color: #4caf50;
+      color: white;
+      padding: 15px;
+      text-align: center; 
+    }
+    main {
+      padding: 20px;
+      max-width: 600px;
+      margin: 20px auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    input,
+    select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .hidden {
+      display: none;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #e8f5e9;
+      border: 1px solid #4caf50;
+      border-radius: 5px;
+    }
+    .admin-section {
+      margin-top: 20px;
+      background-color: #e3f2fd;
+      padding: 15px;
+      border: 1px solid #2196f3;
+      border-radius: 5px;
+    }
+    .menu-item {
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Sistem Rekomendasi Makanan Sehat</h1>
+  </header>
+
+  <!-- Halaman Login -->
+  <main id="login-page">
+    <h2>Login</h2>
+    <form id="login-form">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Masukkan username" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Masukkan password" required />
+      </div>
+      <button type="button" onclick="login()">Login</button>
+      <p>Belum punya akun? <a href="#" onclick="showRegister()">Daftar di sini</a></p>
+    </form>
+  </main>
+
+  <!-- Halaman Pendaftaran -->
+  <main id="register-page" class="hidden">
+    <h2>Daftar Akun</h2>
+    <form id="register-form">
+      <div class="form-group">
+        <label for="new-username">Username</label>
+        <input type="text" id="new-username" placeholder="Masukkan username" required />
+      </div>
+      <div class="form-group">
+        <label for="new-password">Password</label>
+        <input type="password" id="new-password" placeholder="Masukkan password" required />
+      </div>
+      <button type="button" onclick="register()">Daftar</button>
+      <p>Sudah punya akun? <a href="#" onclick="showLogin()">Login di sini</a></p>
+    </form>
+  </main>
+
+  <!-- Halaman Rekomendasi Makanan -->
+  <main id="recommendation-page" class="hidden">
+    <h2>Input Data Pengguna</h2>
+    <form id="recommendation-form">
+      <div class="form-group">
+        <label for="blood-type">Golongan Darah</label>
+        <select id="blood-type" required>
+          <option value="" disabled selected>Pilih Golongan Darah</option>
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="AB">AB</option>
+          <option value="O">O</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="sugar-level">Kadar Gula Darah</label>
+        <select id="sugar-level" required>
+          <option value="" disabled selected>Pilih Kadar Gula Darah</option>
+          <option value="<100">Kurang dari 100</option>
+          <option value="100-129">100-129</option>
+          <option value="130-159">130-159</option>
+        </select>
+      </div>
+      <button type="button" onclick="generateRecommendation()">Dapatkan Rekomendasi</button>
+    </form>
+    <div id="recommendation" class="result" style="display: none;">
+      <h3>Rekomendasi Makanan:</h3>
+      <p><strong>Pagi:</strong> <span id="menu-pagi"></span> (<span id="kalori-pagi"></span> Kalori)</p>
+      <p>Takaran: <span id="takaran-pagi"></span></p>
+      <p>Kandungan gizi: <span id="gizi-pagi"></span></p>
+      <p><strong>Siang:</strong> <span id="menu-siang"></span> (<span id="kalori-siang"></span> Kalori)</p>
+      <p>Takaran: <span id="takaran-siang"></span></p>
+      <p>Kandungan gizi: <span id="gizi-siang"></span></p>
+      <p><strong>Malam:</strong> <span id="menu-malam"></span> (<span id="kalori-malam"></span> Kalori)</p>
+      <p>Takaran: <span id="takaran-malam"></span></p>
+      <p>Kandungan gizi: <span id="gizi-malam"></span></p>
+    </div>
+  </main>
+
+  <!-- Halaman Admin -->
+  <main id="admin-page" class="hidden">
+    <h2>Pengelolaan Data</h2>
+    <div class="admin-section">
+      <h3>Data Menu Makanan</h3>
+      <div id="menu-list"></div>
+      <div class="form-group">
+        <label for="new-menu">Tambah Menu Makanan</label>
+        <input type="text" id="new-menu" placeholder="Masukkan nama menu" />
+        <button type="button" onclick="addMenu()">Tambah</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const users = {
+      admin: "admin123",
+      user: "user123"
+    };
+
+    const menuA = [
+      { name: "Omelet bayam dan wortel + jus apel tanpa gula", kalori: 250, takaran: "1 porsi", gizi: "Protein: 12g, Karbohidrat: 18g, Lemak: 10g" },
+      { name: "Sup jagung ayam + tumis brokoli", kalori: 400, takaran: "1 piring", gizi: "Protein: 25g, Karbohidrat: 30g, Lemak: 15g" },
+      { name: "Salmon panggang + lalapan bayam dan wortel rebus", kalori: 350, takaran: "1 piring", gizi: "Protein: 28g, Karbohidrat: 10g, Lemak: 12g" },
+      { name: "Tahu bacem + Jambu biji ", kalori: 200, takaran: "1 porsi dan 1 buah", gizi: "protein: 10g, Karbohidrat: 30g, Lemak: 5g"},
+      { name: "Tempe goreng + Kentang rebus + Sayur lodeh tanpa santan ", kalori: 400, takaran: "1 porsi", gizi: "protein: 20g, Karbohidrat: 50g, Lemak: 15g"},
+      { name: "Perkedel tahu + Salad jeruk dan selada", kalori: 300, takaran: "1 porsi", gizi: "protein: 15g, Karbohidrat: 25g, Lemak: 10g"},
+      { name: "Nasi merah + tahu kukus + brokoli rebus", kalori: 350, takaran: "1 porsi", gizi: "protein: 15g, Karbohidrat: 45g, Lemak: 25g"},
+      { name: "Daging sapi (buat semur atau dan lain-lain) + tumis bayam", kalori: 500, takaran: "150g daging dan 1 porsi sayur", gizi: "protein: 35g, Karbohidrat: 20g, Lemak: 25g"},
+      { name: "Telur puyuh + Sayur bening", kalori: 250, takaran: "1 porsi + 4 butir telur", gizi: "protein: 20g, Karbohidrat: 10g, Lemak: 5g"}
+    ];
+    const menuB = [
+      { name: "Kentang panggang + Telur rebus + Irisan apel", kalori: 300, takaran: "1 porsi, 1 butir telur, dan 1 buah", gizi: "Protein: 10g, Karbohidrat: 45g, Lemak: 10g" },
+      { name: "Ikan Tuna Bakar + Brokoli kukus + Nasi merah", kalori: 400, takaran: "1 porsi", gizi: "Protein: 30g, Karbohidrat: 50g, Lemak: 15g" },
+      { name: "Sup kacang merah + Jus jeruk segar", kalori: 250, takaran: "1 mangkuk dan 1 gelas", gizi: "Protein: 15g, Karbohidrat: 35g, Lemak: 5g" },
+      { name: "Roti gandum panggang + Melon + Keju ", kalori: 350, takaran: "1 porsi", gizi: "protein: 12g, Karbohidrat: 50g, Lemak: 15g"},
+      { name: "Steak daging sapi + Kentang Rebus + Tumis bayam", kalori: 500, takaran: "1 porsi sayur dan 150g daging", gizi: "protein: 40g, Karbohidrat: 40g, Lemak: 20g"},
+      { name: "Kacang tanah sangrai + Potongan buah segar", kalori: 300, takaran: "1 porsi", gizi: "protein: 15g, Karbohidrat: 25g, Lemak: 15g"},
+      { name: "Roti beras isi ayam + Teh herbal", kalori: 400, takaran: "1 porsi", gizi: "protein: 25g, Karbohidrat: 45g, Lemak: 10g"},
+      { name: "Ayam kecap + Sayur bening kacang hijau + Nasi Putih", kalori: 450, takaran: "1 porsi", gizi: "protein: 30g, Karbohidrat: 50g, Lemak: 15g"},
+      { name: "Sup ayam kentang + lalapan tomat", kalori: 350, takaran: "1 porsi", gizi: "protein: 25g, Karbohidrat: 30g, Lemak: 10g"}
+    ];
+    const menuAB = [
+      { name: "Kentang rebus + Telur dadar sayur + Apel", kalori: 300, takaran: "1 porsi", gizi: "Protein: 12g, Karbohidrat: 40g, Lemak: 8g" },
+      { name: "Ikan salmon Panggang + Sup Brokoli + Jambu", kalori: 450, takaran: "1 porsi", gizi: "Protein: 35g, Karbohidrat: 30g, Lemak: 20g" },
+      { name: "Tahu isi kukus + Daging sapi panggang", kalori: 450, takaran: "1 porsi tahu dan 150g daging", gizi: "Protein: 30g, Karbohidrat: 20g, Lemak: 15g" },
+      { name: "Nasi Merah + Telur rebus + Melon", kalori: 350, takaran: "1 porsi dan 4 butir telur", gizi: "protein: 15g, Karbohidrat: 45g, Lemak: 10g"},
+      { name: "Ayam panggang madu (tanpa gula) + Tumis kacang tanah + Kentang ", kalori: 500, takaran: "1 porsi", gizi: "protein: 35g, Karbohidrat: 40g, Lemak: 20g"},
+      { name: "Sup Kacang merah + telur dadar tipis", kalori: 300, takaran: "1 mangkuk", gizi: "protein: 15g, Karbohidrat: 35g, Lemak: 5g"},
+      { name: "Nasi putih + bayam tumis + tomat segar", kalori: 300, takaran: "1 porsi", gizi: "protein: 10g, Karbohidrat: 40g, Lemak: 8g"},
+      { name: "Ayam kuah bening + Tempe goreng + wortel kukus", kalori: 450, takaran: "1 porsi", gizi: "protein: 30g, Karbohidrat: 30g, Lemak: 10g"},
+      { name: "Jagung rebus + Brokoli panggang", kalori: 250, takaran: "1 porsi", gizi: "protein: 10g, Karbohidrat: 20g, Lemak: 5g"}
+    ];
+    const menuO = [
+      { name: "Telur rebus + Apel + Tempe panaggang", kalori: 350, takaran: "1 porsi dan 2 butir telur", gizi: "Protein: 20g, Karbohidrat: 30g, Lemak: 15g" },
+      { name: "Ikan tuna kuah asam + Kentang rebus + Sayur bayam", kalori: 400, takaran: "1 porsi", gizi: "Protein: 30g, Karbohidrat: 40g, Lemak: 10g" },
+      { name: "Jagung rebus + Ayam kukus + Brokoli rebus", kalori: 350, takaran: "1 porsi sayur dan 150g ayam", gizi: "Protein: 25g, Karbohidrat: 20g, Lemak: 15g" },
+      { name: "Nasi merah + Ayam panggang + Melon ", kalori: 450, takaran: "1 porsi dan 150g ayam ", gizi: "protein: 35g, Karbohidrat: 45g, Lemak: 20g"},
+      { name: "Sapi lada hitam + Tumis brokoli + Kacang tanah panggang ", kalori: 500, takaran: "1 porsi", gizi: "protein: 40g, Karbohidrat: 440g, Lemak: 25g"},
+      { name: "Kentang rebus + Sup telur bening", kalori: 300, takaran: "1 porsi", gizi: "protein: 15g, Karbohidrat: 25g, Lemak: 5g"},
+      { name: "Nasi putih + sayur wortel dan kacang merah", kalori: 350, takaran: "1 porsi", gizi: "protein: 15g, Karbohidrat: 40g, Lemak: 10g"},
+      { name: "Ikan salmon sambal tomat (tanpa gula) + jagung rebus", kalori: 450, takaran: "1 porsi", gizi: "protein: 30g, Karbohidrat: 35g, Lemak: 15g"},
+      { name: "Bayam bening + Ayam rebus", kalori: 300, takaran: "1 porsi sayur dan 150g ayam", gizi: "protein: 25g, Karbohidrat: 20g, Lemak: 10g"}
+    ];
+
+
+    let currentUser = null;
+
+    function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      if (users[username] && users[username] === password) {
+        alert("Login berhasil!");
+        currentUser = username;
+        document.getElementById("login-page").classList.add("hidden");
+        if (username === "admin") {
+          document.getElementById("admin-page").classList.remove("hidden");
+          loadMenu();
+        } else {
+          document.getElementById("recommendation-page").classList.remove("hidden");
+        }
+      } else {
+        alert("Username atau password salah!");
+      }
+    }
+
+    function showRegister() {
+      document.getElementById("login-page").classList.add("hidden");
+      document.getElementById("register-page").classList.remove("hidden");
+    }
+
+    function showLogin() {
+      document.getElementById("register-page").classList.add("hidden");
+      document.getElementById("login-page").classList.remove("hidden");
+    }
+
+    function register() {
+      const newUsername = document.getElementById("new-username").value;
+      const newPassword = document.getElementById("new-password").value;
+
+      if (users[newUsername]) {
+        alert("Username sudah terdaftar!");
+      } else {
+        users[newUsername] = newPassword;
+        alert("Pendaftaran berhasil! Silakan login.");
+        showLogin();
+      }
+    }
+
+    function loadMenu() {
+      const menuList = document.getElementById("menu-list");
+      menuList.innerHTML = "";
+      menus.forEach((menu, index) => {
+        menuList.innerHTML += `
+          <div class="menu-item">
+            ${menu.name} 
+            <button onclick="editMenu(${index})">Edit</button>
+            <button onclick="deleteMenu(${index})">Hapus</button>
+          </div>
+        `;
+      });
+    }
+
+    function addMenu() {
+      const newMenu = document.getElementById("new-menu").value;
+      if (newMenu) {
+        menus.push({ name: newMenu, kalori: 300, takaran: "1 porsi", gizi: "Kandungan gizi: belum ditentukan" });
+        document.getElementById("new-menu").value = ""; // Clear input
+        loadMenu();
+      } else {
+        alert("Masukkan nama menu!");
+      }
+    }
+
+    function editMenu(index) {
+      const newMenuName = prompt("Masukkan nama baru untuk menu:", menus[index].name);
+      if (newMenuName) {
+        menus[index].name = newMenuName;
+        loadMenu();
+      }
+    }
+
+    function deleteMenu(index) {
+      if (confirm("Apakah Anda yakin ingin menghapus menu ini?")) {
+        menus.splice(index, 1);
+        loadMenu();
+      }
+    }
+
+    function generateRecommendation() {
+      const bloodType = document.getElementById("blood-type").value;
+      const sugarLevel = document.getElementById("sugar-level").value;
+
+      const rules = {
+        A: {
+            "<100": {
+                pagi: menuA[0],
+                siang: menuA[1],
+                malam: menuA[2]
+            },
+            "100-129":{
+              pagi: menuA[3],
+              siang: menuA[4],
+              malam: menuA[5]
+            },
+            "130-159":{
+              pagi: menuA[6],
+              siang: menuA[7],
+              malam: menuA[8]
+            }
+        },
+        B: {
+            "<100": {
+                pagi: menuB[0],
+                siang: menuB[1],
+                malam: menuB[2]
+            },
+            "100-129":{
+              pagi: menuB[3],
+              siang: menuB[4],
+              malam: menuB[5]
+            },
+            "130-159":{
+              pagi: menuB[6],
+              siang: menuB[7],
+              malam: menuB[8]
+            }
+        },
+        AB: {
+            "<100": {
+                pagi: menuAB[0],
+                siang: menuAB[1],
+                malam: menuAB[2]
+            },
+            "100-129":{
+              pagi: menuAB[3],
+              siang: menuAB[4],
+              malam: menuAB[5]
+            },
+            "130-159":{
+              pagi: menuAB[6],
+              siang: menuAB[7],
+              malam: menuAB[8]
+            }
+        },
+        O: {
+            "<100": {
+                pagi: menuO[0],
+                siang: menuO[1],
+                malam: menuO[2]
+            },
+            "100-129":{
+              pagi: menuO[3],
+              siang: menuO[4],
+              malam: menuO[5]
+            },
+            "130-159":{
+              pagi: menuO[6],
+              siang: menuO[7],
+              malam: menuO[8]
+            }
+        }
+
+      };
+
+      if (!bloodType || !sugarLevel) {
+        alert("Silakan pilih golongan darah dan kadar gula darah!");
+        return;
+      }
+
+      const menu = rules[bloodType][sugarLevel];
+
+      document.getElementById("menu-pagi").textContent = menu.pagi.name;
+      document.getElementById("kalori-pagi").textContent = menu.pagi.kalori;
+      document.getElementById("takaran-pagi").textContent = menu.pagi.takaran;
+      document.getElementById("gizi-pagi").textContent = menu.pagi.gizi;
+
+      document.getElementById("menu-siang").textContent = menu.siang.name;
+      document.getElementById("kalori-siang").textContent = menu.siang.kalori;
+      document.getElementById("takaran-siang").textContent = menu.siang.takaran;
+      document.getElementById("gizi-siang").textContent = menu.siang.gizi;
+
+      document.getElementById("menu-malam").textContent = menu.malam.name;
+      document.getElementById("kalori-malam").textContent = menu.malam.kalori;
+      document.getElementById("takaran-malam").textContent = menu.malam.takaran;
+      document.getElementById("gizi-malam").textContent = menu.malam.gizi;
+
+      document.getElementById("recommendation").style.display = "block";
+    }
+  </script>
+</body>
+</html>
